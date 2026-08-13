@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pick n Pay Mobile · New VAS for Smart Shopper · DSG MVNE</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#BA0C2F; --reddark:#8A0924; --redsoft:rgba(186,12,47,.08);
+    --navy:#122A4E; --navysoft:rgba(18,42,78,.07);
+    --ai:#0E7A6E; --aisoft:rgba(14,122,110,.08);
+    --ink:#181215; --muted:#6B6570; --mutedlight:#9A9299;
+    --gold:#9C6B0A; --goldsoft:rgba(156,107,10,.09);
+    --bg:#F5F1EB; --line:#E9E2D6;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  .hl{color:var(--red);}
+  .hlg{color:var(--gold);}
+  .hln{color:var(--navy);}
+  .hla{color:var(--ai);}
+  .logoimg{height:26px;width:auto;display:block;}
+
+  /* ---- GATE ---- */
+  #gate{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(150deg,#181215 0%,#3A0E16 55%,#8A0924 100%);}
+  #gate.hidden{display:none;}
+  .gatecard{width:100%;max-width:360px;padding:1.5rem;text-align:center;}
+  .gatelogo{background:#fff;border-radius:10px;padding:12px 24px;display:inline-flex;align-items:center;justify-content:center;}
+  .gatelogo img{height:32px;width:auto;}
+  .gatesub{color:#D8D2CC;font-size:.65rem;text-transform:uppercase;letter-spacing:.15em;font-weight:600;margin-top:.7rem;}
+  .gatecard h1{color:#fff;font-size:1.2rem;font-weight:700;margin:1.6rem 0 .5rem;}
+  .gatecard p{color:#D8D2CC;font-size:.8rem;line-height:1.6;margin:0 0 1.6rem;}
+  .gateform{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:1.7rem;text-align:left;}
+  .gateform label{display:block;color:#D8D2CC;font-size:.78rem;font-weight:600;margin-bottom:.5rem;}
+  #pw-input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:.7rem;padding:.7rem 1rem;color:#fff;font-size:.875rem;width:100%;outline:none;font-family:inherit;}
+  #pw-input.error{border-color:#E6738A;}
+  #pw-btn{margin-top:1rem;width:100%;padding:.75rem;border-radius:.7rem;font-weight:700;font-size:.875rem;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--red),#D91B45);border:none;font-family:inherit;}
+  #pw-btn:hover{opacity:.9;}
+  #pw-error{color:#F5A3AE;font-size:.74rem;margin-top:.6rem;display:none;}
+  .gatefoot{text-align:center;margin-top:1.7rem;color:#9C8F95;font-size:.7rem;}
+  .gatefoot strong{color:#C9BEC4;}
+
+  /* ---- APP SHELL ---- */
+  #app[hidden]{display:none;}
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:60;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);height:60px;display:flex;align-items:center;padding:0 1.25rem;gap:.85rem;}
+  .brand{display:flex;align-items:center;gap:.6rem;flex-shrink:0;}
+  .brandtag{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:var(--goldsoft);padding:3px 8px;border-radius:6px;white-space:nowrap;}
+  .pillnav{display:flex;gap:.4rem;overflow-x:auto;flex:1;scrollbar-width:none;}
+  .pillnav::-webkit-scrollbar{display:none;}
+  .pillnav a{white-space:nowrap;font-size:.72rem;font-weight:600;color:var(--muted);text-decoration:none;padding:.4rem .8rem;border-radius:50px;border:1px solid transparent;transition:all .15s;cursor:pointer;flex-shrink:0;}
+  .pillnav a:hover{color:var(--ink);}
+  .pillnav a.active{background:var(--red);color:#fff;}
+  .pillnav a.cta{border-color:var(--gold);color:var(--gold);}
+  .pillnav a.cta.active{background:var(--gold);color:#fff;}
+
+  .stagewrap{padding:88px 1.25rem 96px;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;}
+  #stage{width:100%;max-width:900px;background:#fff;border-radius:22px;box-shadow:0 24px 60px rgba(24,18,21,.08);
+    border:1px solid var(--line);min-height:560px;max-height:calc(100vh - 200px);overflow-y:auto;position:relative;}
+  .slide{display:none;padding:3rem 3.25rem 2.5rem;animation:fadeIn .35s ease;}
+  .slide.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:.65rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--red);border:1px solid rgba(186,12,47,.28);background:var(--redsoft);padding:5px 14px;border-radius:50px;margin-bottom:1.4rem;}
+  .eyebrow.gold{color:var(--gold);border-color:rgba(156,107,10,.3);background:var(--goldsoft);}
+  .eyebrow.navy{color:var(--navy);border-color:rgba(18,42,78,.25);background:var(--navysoft);}
+  .eyebrow.ai{color:var(--ai);border-color:rgba(14,122,110,.3);background:var(--aisoft);}
+
+  h1.sh{font-size:1.95rem;font-weight:900;letter-spacing:-.02em;line-height:1.18;margin:0 0 1.1rem;color:var(--ink);}
+  h2.ssh{font-size:1.1rem;font-weight:800;letter-spacing:-.01em;margin:1.6rem 0 .9rem;color:var(--ink);}
+  p.lede{font-size:1rem;line-height:1.7;color:var(--muted);margin:0 0 1.6rem;max-width:660px;}
+  p.body-sm{font-size:.86rem;line-height:1.7;color:var(--muted);margin:0 0 1rem;}
+
+  .statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem;margin:1.5rem 0;}
+  .statrow.c3{grid-template-columns:repeat(3,1fr);}
+  .stat{background:#FBF9F5;border:1px solid var(--line);border-radius:14px;padding:1rem .9rem;}
+  .stat b{display:block;font-size:1.2rem;font-weight:900;letter-spacing:-.02em;color:var(--red);line-height:1.1;}
+  .stat b.g{color:var(--gold);}
+  .stat b.n{color:var(--navy);}
+  .stat span{display:block;font-size:.7rem;color:var(--muted);margin-top:.3rem;line-height:1.35;}
+
+  .cardgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;margin:1.4rem 0;}
+  .cardgrid.c2{grid-template-columns:repeat(2,1fr);}
+  .cardgrid.c4{grid-template-columns:repeat(4,1fr);}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:1.2rem;}
+  .card h4{font-size:.86rem;font-weight:800;margin:0 0 .4rem;color:var(--ink);}
+  .card p{font-size:.78rem;color:var(--muted);line-height:1.55;margin:0;}
+  .card .num{width:26px;height:26px;border-radius:8px;background:var(--redsoft);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;margin-bottom:.7rem;}
+
+  .checklist{display:flex;flex-direction:column;gap:.55rem;margin:0 0 1rem;}
+  .checklist div{display:flex;gap:.6rem;font-size:.84rem;color:#3A3438;line-height:1.5;}
+  .checklist .tick{color:var(--red);font-weight:800;flex-shrink:0;}
+  .checklist.gold .tick{color:var(--gold);}
+  .checklist.navy .tick{color:var(--navy);}
+  .checklist.ai .tick{color:var(--ai);}
+  .checklist.mut .tick{color:var(--mutedlight);}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem;margin:1.2rem 0;}
+  .boxlabel{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--red);margin-bottom:.8rem;}
+  .boxlabel.mut{color:var(--muted);}
+  .boxlabel.gold{color:var(--gold);}
+  .boxlabel.navy{color:var(--navy);}
+  .boxlabel.ai{color:var(--ai);}
+
+  table.pt{width:100%;border-collapse:collapse;font-size:.78rem;margin:.5rem 0;}
+  table.pt th{text-align:left;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--red);padding:.55rem .6rem;background:#FBF3EE;border-bottom:1px solid var(--line);}
+  table.pt td{padding:.55rem .6rem;border-bottom:1px solid #F2ECE1;color:#3A3438;}
+  table.pt .r{text-align:right;font-variant-numeric:tabular-nums;}
+  table.pt tr.total td{font-weight:700;background:#FBF9F5;}
+
+  .quote{border-left:3px solid var(--gold);padding-left:1rem;font-size:.84rem;color:#3A3438;font-style:italic;line-height:1.6;margin:.9rem 0;}
+  .quote cite{display:block;font-style:normal;font-size:.72rem;color:var(--muted);margin-top:.4rem;}
+
+  .barlist{display:flex;flex-direction:column;gap:.55rem;margin:.8rem 0;}
+  .barrow{display:flex;align-items:center;gap:.6rem;}
+  .barrow .lbl{width:110px;flex-shrink:0;font-size:.74rem;color:var(--muted);}
+  .barrow .lbl.on{color:var(--red);font-weight:700;}
+  .barrow .track{flex:1;height:.7rem;background:#F1ECE3;border-radius:50px;overflow:hidden;}
+  .barrow .fill{height:100%;background:linear-gradient(90deg,var(--red),#D91B45);border-radius:50px;}
+  .barrow .fill.mut{background:#CFC7BC;}
+  .barrow .fill.navy{background:linear-gradient(90deg,var(--navy),#2A4F87);}
+  .barrow .val{width:64px;font-size:.72rem;font-weight:700;color:var(--muted);text-align:right;}
+  .barrow .val.on{color:var(--red);}
+
+  .darkslab{background:linear-gradient(150deg,#181215,#3A0E16 120%);border-radius:16px;padding:1.6rem 1.7rem;color:#fff;margin:1.2rem 0;}
+  .darkslab .boxlabel{color:#F0C879;}
+  .darkslab .checklist div{color:#E6DFDA;}
+  .darkslab .checklist .tick{color:#F0C879;}
+
+  .footnote{font-size:.66rem;color:var(--mutedlight);margin-top:.9rem;line-height:1.5;}
+  .pillrow{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0;}
+  .miniPill{font-size:.68rem;font-weight:700;color:var(--muted);background:#F2ECE1;border-radius:50px;padding:.35rem .8rem;display:inline-block;}
+
+  /* ---- VAS PRICE ROW ---- */
+  .vasblock{border:1px solid var(--line);border-radius:14px;padding:1.3rem 1.4rem;margin-bottom:1rem;}
+  .vashead{display:flex;align-items:center;gap:.7rem;margin-bottom:1rem;}
+  .vashead .icon{width:34px;height:34px;border-radius:9px;background:var(--redsoft);display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;}
+  .vashead h3{font-size:1rem;font-weight:800;margin:0;color:var(--ink);}
+  .vashead span{display:block;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-top:1px;}
+  .pricerow{display:flex;justify-content:space-between;align-items:flex-start;padding:.7rem 0;border-bottom:1px solid #F2ECE1;}
+  .pricerow:last-of-type{border-bottom:none;}
+  .pricerow .pn{font-weight:700;font-size:.86rem;color:var(--ink);}
+  .pricerow .pd{font-size:.76rem;color:var(--muted);margin-top:.15rem;}
+  .pricerow .pp{text-align:right;flex-shrink:0;padding-left:1rem;}
+  .pricerow .pp b{display:block;font-size:1.05rem;font-weight:900;color:var(--gold);}
+  .pricerow .pp small{display:block;font-size:.72rem;color:var(--red);font-weight:600;}
+  .vasfeat{display:flex;flex-direction:column;gap:.4rem;margin-top:.9rem;padding-top:.9rem;border-top:1px dashed var(--line);}
+  .vasfeat div{font-size:.79rem;color:#3A3438;display:flex;gap:.5rem;}
+  .vasfeat div::before{content:'•';color:var(--gold);font-weight:900;}
+
+  /* ---- BUNDLE CVP CARD ---- */
+  .bundlecard{border:2px solid rgba(186,12,47,.18);border-radius:18px;padding:1.7rem;margin:1rem 0;background:linear-gradient(180deg,rgba(186,12,47,.03),#fff 30%);}
+  .bundlecard.gold{border-color:rgba(156,107,10,.25);background:linear-gradient(180deg,rgba(156,107,10,.04),#fff 30%);}
+  .bundlecard.navy{border-color:rgba(18,42,78,.22);background:linear-gradient(180deg,rgba(18,42,78,.04),#fff 30%);}
+  .bundlecard.ai{border-color:rgba(14,122,110,.22);background:linear-gradient(180deg,rgba(14,122,110,.04),#fff 30%);}
+  .bundleprice{display:flex;align-items:baseline;gap:.5rem;margin:.3rem 0 .2rem;flex-wrap:wrap;}
+  .bundleprice b{font-size:1.9rem;font-weight:900;color:var(--red);letter-spacing:-.02em;}
+  .bundlecard.gold .bundleprice b{color:var(--gold);}
+  .bundlecard.navy .bundleprice b{color:var(--navy);}
+  .bundlecard.ai .bundleprice b{color:var(--ai);}
+  .bundleprice span{font-size:.8rem;color:var(--muted);font-weight:600;}
+  .valuebox{background:#FBF9F5;border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem;margin-top:1rem;}
+  .valuebox .vrow{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);padding:.35rem 0;border-bottom:1px dashed var(--line);gap:1rem;}
+  .valuebox .vrow:last-of-type{border-bottom:none;}
+  .valuebox .vrow b{color:var(--ink);font-weight:700;flex-shrink:0;}
+  .valuebox .total{display:flex;justify-content:space-between;align-items:baseline;margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--line);}
+  .valuebox .total b{font-size:1.15rem;color:var(--red);}
+  .bundlecard.gold .valuebox .total b{color:var(--gold);}
+  .bundlecard.navy .valuebox .total b{color:var(--navy);}
+  .bundlecard.ai .valuebox .total b{color:var(--ai);}
+
+  /* ---- FINANCIAL MODEL ---- */
+  .kpigrid{display:grid;grid-template-columns:repeat(2,1fr);gap:.9rem;margin:1.2rem 0;}
+  .kpicell{background:#FBF9F5;border:1px solid var(--line);border-radius:14px;padding:1rem 1.1rem;}
+  .kpicell .kl{font-size:.64rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.35rem;}
+  .kpicell .kv{font-size:1.35rem;font-weight:900;letter-spacing:-.02em;color:var(--ink);}
+  .kpicell .kv.red{color:var(--red);} .kpicell .kv.gold{color:var(--gold);} .kpicell .kv.navy{color:var(--navy);}
+  .kpicell .ks{font-size:.72rem;color:var(--muted);margin-top:.25rem;line-height:1.4;}
+  .scentable{width:100%;border-collapse:collapse;font-size:.8rem;margin:.7rem 0 1.2rem;}
+  .scentable th{text-align:center;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:.5rem;border-bottom:2px solid var(--line);}
+  .scentable th:first-child{text-align:left;}
+  .scentable td{text-align:center;padding:.55rem;border-bottom:1px solid #F2ECE1;color:#3A3438;font-variant-numeric:tabular-nums;}
+  .scentable td:first-child{text-align:left;font-weight:700;color:var(--ink);}
+  .scentable td.best{color:var(--gold);font-weight:700;}
+
+  .contactcard{background:linear-gradient(150deg,#181215,#3A0E16 120%);border-radius:18px;padding:2rem;color:#fff;text-align:center;margin-top:1rem;}
+  .contactcard .name{font-weight:800;font-size:1.15rem;margin:.9rem 0 .1rem;}
+  .contactcard .role{color:#C9BEC4;font-size:.82rem;margin-bottom:1rem;}
+  .contactcard a{color:#F0C879;font-weight:700;font-size:.88rem;text-decoration:none;}
+
+  /* ---- FOOTER / NAV CONTROLS ---- */
+  .footbar{position:fixed;bottom:0;left:0;right:0;z-index:60;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);height:64px;display:flex;align-items:center;padding:0 1.25rem;gap:1rem;}
+  .footbar .ftitle{font-weight:800;font-size:.85rem;color:var(--ink);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .footbar .fcount{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums;flex-shrink:0;}
+  .navbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:1rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+  .navbtn:hover:not(:disabled){background:var(--red);color:#fff;border-color:var(--red);}
+  .navbtn:disabled{opacity:.3;cursor:default;}
+  .progresstrack{position:fixed;bottom:64px;left:0;right:0;height:3px;background:var(--line);z-index:61;}
+  .progressfill{height:100%;background:linear-gradient(90deg,var(--red),var(--gold));transition:width .3s ease;}
+  .footlogo{height:16px;width:auto;opacity:.85;}
+
+  @media(max-width:760px){
+    .slide{padding:2rem 1.4rem 2rem;}
+    h1.sh{font-size:1.4rem;}
+    .statrow,.statrow.c3,.cardgrid,.cardgrid.c2,.cardgrid.c4,.twocol,.kpigrid{grid-template-columns:1fr 1fr;}
+    .pricerow{flex-direction:column;}
+    .pricerow .pp{text-align:left;padding-left:0;margin-top:.3rem;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ GATE ============ -->
+<div id="gate">
+  <div class="gatecard">
+    <div class="gatelogo"><img src="data:image/png;base64,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" alt="Pick n Pay"></div>
+    <div class="gatesub">Mobile &amp; Smart Shopper VAS</div>
+    <h1>A Proposal for Pick n Pay Group</h1>
+    <p>This proposal is confidential and intended for Pick n Pay leadership.<br>Please enter the access password provided by your contact at MVNE.</p>
+    <div class="gateform">
+      <label>Access Password</label>
+      <input id="pw-input" type="password" placeholder="Enter access password" autocomplete="off" onkeydown="if(event.key==='Enter')checkPw()">
+      <div id="pw-error">Incorrect password. Please try again.</div>
+      <button id="pw-btn" onclick="checkPw()">Access Proposal →</button>
+    </div>
+    <div class="gatefoot">Prepared by <strong>MVNE / DSG</strong> · Confidential</div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" hidden>
+
+  <header class="topbar">
+    <div class="brand"><img class="logoimg" src="data:image/png;base64,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" alt="Pick n Pay"></div>
+    <span class="brandtag">Smart Shopper VAS</span>
+    <nav class="pillnav" id="pillnav">
+      <a data-goto="1">Opportunity</a>
+      <a data-goto="2">About DSG</a>
+      <a data-goto="3">Integration</a>
+      <a data-goto="4">VAS</a>
+      <a data-goto="9">Bundles</a>
+      <a data-goto="13">Proof</a>
+      <a data-goto="17">Financial Model</a>
+      <a data-goto="20">Timeline</a>
+      <a data-goto="21" class="cta">Contact</a>
+    </nav>
+  </header>
+
+  <div class="stagewrap"><div id="stage">
+
+    <!-- 0 : COVER -->
+    <section class="slide">
+      <span class="eyebrow">Prepared for Pick n Pay Group · 2026</span>
+      <h1 class="sh">New value inside PnP Mobile, for every <span class="hl">Smart Shopper.</span></h1>
+      <p class="lede">Pick n Pay already runs PnP Mobile and Smart Shopper — a live network and a 16-million-member loyalty base. This proposal doesn't ask Pick n Pay to build anything new. It adds four value-added services on top of what already exists: <strong style="color:var(--ink)">Bitdefender</strong> device &amp; identity protection, <strong style="color:var(--ink)">eInsurer</strong> personal cyber cover, <strong style="color:var(--ink)">Travel eSIM</strong> global connectivity, and <strong style="color:var(--ink)">My Instant AI</strong> prepaid AI tokens — attached to the PnP Mobile SIM and settled through the Smart Shopper app subscribers already use.</p>
+      <div class="statrow">
+        <div class="stat"><b>16M</b><span>Smart Shopper base</span></div>
+        <div class="stat"><b>2,000+</b><span>Stores nationwide</span></div>
+        <div class="stat"><b>4</b><span>New VAS, 4 bundle CVPs</span></div>
+        <div class="stat"><b>Weeks</b><span>not months, to integrate</span></div>
+      </div>
+      <p class="footnote">Draws on three DSG proposals — the DSG Group overview, the Bitdefender cybersecurity platform, and the Travel eSIM opportunity model — plus DSG's live eInsurer and Bitdefender VAS pricing, reframed around Pick n Pay's existing PnP Mobile base.</p>
+    </section>
+
+    <!-- 1 : OPPORTUNITY -->
+    <section class="slide">
+      <span class="eyebrow">The Opportunity</span>
+      <h1 class="sh">PnP Mobile and Smart Shopper already do the hard part — <span class="hl">attach, don't rebuild.</span></h1>
+      <p class="lede">Every day, PnP Mobile subscribers top up airtime and data, and Smart Shopper members earn points on groceries. Today none of that spend is protected against fraud, identity theft or data loss while travelling, and there's no prepaid AI option at all. Four new VAS close those gaps, on infrastructure that already exists.</p>
+      <div class="cardgrid">
+        <div class="card"><div class="num">01</div><h4>Existing base, new revenue</h4><p>No new subscribers to acquire — every current PnP Mobile SIM is a live attach opportunity.</p></div>
+        <div class="card"><div class="num">02</div><h4>One loyalty number, four products</h4><p>Smart Shopper already identifies the customer — Bitdefender, eInsurer and Travel eSIM ride on the same number; My Instant AI sells as a standalone voucher through the same app and till.</p></div>
+        <div class="card"><div class="num">03</div><h4>No network to build</h4><p>These are app-level, billing-level and voucher-level attachments, not infrastructure — live in weeks via API integration.</p></div>
+      </div>
+      <div class="darkslab">
+        <div class="boxlabel">Why this is low-risk</div>
+        <p style="color:#E6DFDA;font-size:.85rem;line-height:1.7;margin:0;">Bitdefender and eInsurer already run inside comparable connectivity brands' plans at scale, with proven attach-rate ranges and pricing. This is not an experimental product — it's a proven attach model, applied to a base Pick n Pay already owns.</p>
+      </div>
+    </section>
+
+    <!-- 2 : ABOUT DSG -->
+    <section class="slide">
+      <span class="eyebrow">The Provider</span>
+      <h1 class="sh">Seven divisions. <span class="hl">One stack.</span></h1>
+      <p class="lede">DSG is the South African technology group behind the platform. Each division operates independently and composes naturally with the others — Pick n Pay can engage the ones relevant to this proposal, or the group as a whole.</p>
+      <div class="cardgrid">
+        <div class="card"><div class="num">01</div><h4>MVNE</h4><p><strong>Mobile Virtual Network Enabler</strong> — VAS, eSIM, travel eSIM, loyalty and revenue assurance for existing mobile operators and brands.</p></div>
+        <div class="card"><div class="num">02</div><h4>CXG</h4><p><strong>Customer Experience Group</strong> — omni-channel support across voice, email, chat, social and WhatsApp; CRM and BI.</p></div>
+        <div class="card"><div class="num">03</div><h4>Digitalise</h4><p><strong>Design &amp; Development Studio</strong> — digital transformation, SEO/PPC, web and app development.</p></div>
+        <div class="card"><div class="num">04</div><h4>BroadBrand</h4><p><strong>AI-Driven Mobile Media Marketing</strong> — MaaS, content, digital advertising and the Xanite CVM platform.</p></div>
+        <div class="card"><div class="num">05</div><h4>digitalmall.com</h4><p><strong>Turnkey E-Commerce</strong> — branded online stores, device and SIM sales, bundle commerce.</p></div>
+        <div class="card"><div class="num">06</div><h4>Digital Resilience</h4><p><strong>Managed Cybersecurity</strong> — for enterprises, SMEs and consumers, powered by Bitdefender.</p></div>
+        <div class="card" style="border-color:rgba(186,12,47,.25);background:var(--redsoft);"><div class="num" style="background:rgba(186,12,47,.14);">07</div><h4>eInsurer</h4><p><strong>Personal Cyber Insurance</strong> — protects the individual, their device and their funds. Identity theft, digital wallet fraud and unauthorised transactions, in Entry, TERA and GIGA tiers.</p></div>
+      </div>
+    </section>
+
+    <!-- 3 : INTEGRATION -->
+    <section class="slide">
+      <span class="eyebrow gold">The Integration</span>
+      <h1 class="sh">Same SIM. Same app. <span class="hlg">New protection.</span></h1>
+      <p class="lede">No new hardware, no new app download, no new loyalty card. Bitdefender, eInsurer and Travel eSIM attach directly to the PnP Mobile SIM subscribers already carry and bill through the Smart Shopper number they already use; My Instant AI redeems as a standalone voucher through the same app and till, no billing relationship required.</p>
+      <div class="cardgrid c4">
+        <div class="card"><div class="num">01</div><h4>Opt in, in-app</h4><p>Activated from the existing PnP Mobile / Smart Shopper app — no new sign-up.</p></div>
+        <div class="card"><div class="num">02</div><h4>Billed on the same account</h4><p>Added as a line item on the existing PnP Mobile bill or airtime balance.</p></div>
+        <div class="card"><div class="num">03</div><h4>Points on every rand</h4><p>VAS spend earns Smart Shopper points, exactly like groceries do today.</p></div>
+        <div class="card"><div class="num">04</div><h4>Cancel or upgrade anytime</h4><p>Managed entirely in-app — no call centre required to change tiers.</p></div>
+      </div>
+      <div class="twocol">
+        <div class="card">
+          <div class="boxlabel">Why it matters for Pick n Pay</div>
+          <div class="checklist">
+            <div><span class="tick">✓</span>New attach revenue on an existing base — no acquisition cost</div>
+            <div><span class="tick">✓</span>Higher Smart Shopper engagement per member, per month</div>
+            <div><span class="tick">✓</span>No telco licence change, no network build, no new capex</div>
+            <div><span class="tick">✓</span>Richer, POPIA-compliant data across mobile, security and travel spend</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="boxlabel">Why it matters for the Smart Shopper</div>
+          <div class="checklist">
+            <div><span class="tick">✓</span>One number, one app, one loyalty balance — nothing new to manage</div>
+            <div><span class="tick">✓</span>Device, identity and funds protected, not just data</div>
+            <div><span class="tick">✓</span>Protection bundled in, not upsold by a stranger on the phone</div>
+            <div><span class="tick">✓</span>Travel data ready before departure, from the same app</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 : VAS TOOLKIT OVERVIEW -->
+    <section class="slide">
+      <span class="eyebrow">VAS Toolkit</span>
+      <h1 class="sh">Everything bundled, <span class="hl">attach anytime</span></h1>
+      <p class="lede">Four value-added services, pre-integrated and ready to activate. Each one turns on in-app or at till point, bills on the existing PnP Mobile account (or redeems on a standalone voucher), and earns Smart Shopper points — no separate sign-up, no separate statement.</p>
+      <div class="cardgrid c4">
+        <div class="card">
+          <div class="num" style="background:var(--redsoft);">🛡️</div>
+          <h4>Bitdefender</h4>
+          <p>#1-ranked security, antivirus, VPN &amp; identity protection. From R52.47/month.</p>
+        </div>
+        <div class="card">
+          <div class="num" style="background:var(--goldsoft);color:var(--gold);">🔐</div>
+          <h4>eInsurer</h4>
+          <p>Personal cyber insurance — funds, identity &amp; fraud response. From R9.99/month.</p>
+        </div>
+        <div class="card">
+          <div class="num" style="background:var(--navysoft);color:var(--navy);">✈️</div>
+          <h4>Travel eSIM</h4>
+          <p>Data in 150+ countries on the same SIM. R249.23/year Annual Credit Pack.</p>
+        </div>
+        <div class="card">
+          <div class="num" style="background:var(--aisoft);color:var(--ai);">🤖</div>
+          <h4>My Instant AI</h4>
+          <p>Prepaid AI assistant tokens, redeemed on a PIN. From a R20 voucher.</p>
+        </div>
+      </div>
+      <div class="darkslab">
+        <div class="boxlabel">How pricing works across this proposal</div>
+        <p style="color:#E6DFDA;font-size:.85rem;line-height:1.7;margin:0;">Bitdefender and eInsurer are monthly recurring VAS fees. Travel eSIM is sold as an annual data credit. My Instant AI is a prepaid voucher with no recurring charge at all. Each is shown at its real price and billing cadence throughout this proposal — never blended into a single misleading monthly figure.</p>
+      </div>
+    </section>
+
+    <!-- 5 : VAS - BITDEFENDER -->
+    <section class="slide">
+      <span class="eyebrow">VAS Menu · Bitdefender</span>
+      <h1 class="sh">Bitdefender — <span class="hl">device &amp; identity protection</span></h1>
+      <p class="lede">The world's #1 rated cybersecurity platform, added to any existing PnP Mobile SIM. Prices shown incl. VAT with the ex-VAT wholesale rate below.</p>
+      <div class="vasblock">
+        <div class="vashead"><div class="icon">🛡️</div><div><h3>Bitdefender Security</h3><span>Device &amp; Identity Protection</span></div></div>
+        <div class="pricerow"><div><div class="pn">1 Device</div><div class="pd">Security + Digital Identity Protection</div></div><div class="pp"><b>R52.47</b><small>R45.63 ex</small></div></div>
+        <div class="pricerow"><div><div class="pn">Family · 5 Devices</div><div class="pd">Whole-household cover</div></div><div class="pp"><b>R115.64</b><small>R100.56 ex</small></div></div>
+        <div class="pricerow"><div><div class="pn">10 Devices</div><div class="pd">Extended family / micro-business</div></div><div class="pp"><b>R165.20</b><small>R143.65 ex</small></div></div>
+        <div class="pricerow"><div><div class="pn">Premium + VPN</div><div class="pd">1 device · adds VPN &amp; advanced threat defence</div></div><div class="pp"><b>R89.40</b><small>R77.74 ex</small></div></div>
+        <div class="vasfeat">
+          <div>Real-time antivirus &amp; anti-malware</div>
+          <div>Scam, phishing &amp; fraud-link blocking</div>
+          <div>Digital identity &amp; dark-web monitoring</div>
+          <div>Safe browsing on any network — home or mobile</div>
+        </div>
+      </div>
+      <p class="footnote">Pricing per DSG's live Bitdefender VAS rate card, incl. VAT / ex. VAT. Optional attach on any PnP Mobile plan.</p>
+    </section>
+
+    <!-- 5 : VAS - EINSURER -->
+    <section class="slide">
+      <span class="eyebrow gold">VAS Menu · eInsurer</span>
+      <h1 class="sh">eInsurer — protecting the shopper's <span class="hlg">identity, device and funds</span></h1>
+      <p class="lede">Bitdefender stops the attack. eInsurer covers what happens if one still gets through — funds, identity and peace of mind, not just the device.</p>
+      <div class="vasblock">
+        <div class="vashead"><div class="icon" style="background:var(--goldsoft);">🔐</div><div><h3>eInsurer Cyber Cover</h3><span>Personal Cyber Insurance</span></div></div>
+        <div class="pricerow"><div><div class="pn">Entry</div><div class="pd">Core cyber cover</div></div><div class="pp"><b>R9.99</b><small>R8.69 ex</small></div></div>
+        <div class="pricerow"><div><div class="pn">TERA</div><div class="pd">+ identity-theft restoration</div></div><div class="pp"><b>R19.99</b><small>R17.38 ex</small></div></div>
+        <div class="pricerow"><div><div class="pn">GIGA</div><div class="pd">+ priority fraud response · cover up to R50,000</div></div><div class="pp"><b>R29.99</b><small>R26.08 ex</small></div></div>
+        <div class="vasfeat">
+          <div>Personal cyber-insurance cover — limits scale by tier</div>
+          <div>Covers digital wallet fraud &amp; unauthorised card transactions</div>
+          <div>Identity-theft restoration support</div>
+          <div>Dedicated fraud-response line</div>
+        </div>
+      </div>
+      <p class="footnote">Pricing per DSG's live eInsurer VAS rate card, incl. VAT / ex. VAT. Sits alongside Bitdefender — insurance for what antivirus alone can't stop.</p>
+    </section>
+
+    <!-- 6 : VAS - TRAVEL ESIM -->
+    <section class="slide">
+      <span class="eyebrow gold">VAS Menu · Travel eSIM</span>
+      <h1 class="sh">Travel eSIM — <span class="hlg">connectivity that follows the Smart Shopper abroad</span></h1>
+      <p class="lede">The same PnP Mobile SIM, with a second digital profile for international data — no roaming bill shock, no airport kiosk queue.</p>
+      <div class="vasblock">
+        <div class="vashead"><div class="icon">✈️</div><div><h3>Travel eSIM</h3><span>International Data</span></div></div>
+        <div class="pricerow"><div><div class="pn">Annual Credit Pack</div><div class="pd">Data in 150+ countries</div></div><div class="pp"><b>R249.23</b><small>R216.72 ex</small></div></div>
+        <div class="pricerow"><div><div class="pn">Pay-As-You-Go</div><div class="pd">Top up per trip</div></div><div class="pp"><b>~R21/mo</b><small>equivalent</small></div></div>
+        <div class="vasfeat">
+          <div>Roaming data across 150+ countries</div>
+          <div>Same eSIM — no SIM swap, no bill shock</div>
+          <div>Smart Shopper points keep earning abroad</div>
+          <div>Managed entirely in the PnP Mobile app</div>
+        </div>
+      </div>
+      <p class="footnote">Pricing per DSG's live Travel eSIM VAS rate card. Global travel eSIM market exceeds $4.4B by 2030 with ~280M users — the category is growing fast.</p>
+    </section>
+
+    <!-- 7 : VAS - MY INSTANT AI -->
+    <section class="slide">
+      <span class="eyebrow ai">VAS Menu · My Instant AI</span>
+      <h1 class="sh">My Instant AI — <span class="hla">prepaid AI tokens</span></h1>
+      <p class="lede">A prepaid voucher, sold at the till or in the app. The shopper enters the PIN, tokens load, and they use the assistant until the tokens run out. No bank card, no contract, no monthly debit order.</p>
+      <div class="vasblock">
+        <div class="vashead"><div class="icon" style="background:var(--aisoft);color:var(--ai);">🤖</div><div><h3>My Instant AI</h3><span>Prepaid AI Tokens</span></div></div>
+        <div class="pricerow"><div><div class="pn">R20 Card</div><div class="pd">10,000 tokens · 500 per rand</div></div><div class="pp"><b>R20.00</b><small>R17.39 ex</small></div></div>
+        <div class="pricerow"><div><div class="pn">R100 Card</div><div class="pd">60,000 tokens · 600 per rand</div></div><div class="pp"><b>R100.00</b><small>R86.96 ex</small></div></div>
+        <div class="pricerow"><div><div class="pn">R200 Card</div><div class="pd">150,000 tokens · 750 per rand</div></div><div class="pp"><b>R200.00</b><small>R173.91 ex</small></div></div>
+        <div class="vasfeat">
+          <div>Redeems on a PIN — reaches shoppers with no bank account</div>
+          <div>Runs on any smartphone, through the browser or the Android app</div>
+          <div>Sells on the same voucher rails Pick n Pay already runs for airtime and data, as a new SKU rather than a new system</div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(14,122,110,.25);background:var(--aisoft);">
+        <div class="boxlabel ai">How the pricing works</div>
+        <p style="font-size:.85rem;color:#3A3438;line-height:1.7;margin:0;">Tokens are the unit of use. A question and its answer spend a few hundred tokens, so a R20 card carries a shopper for weeks of light use. The bigger the card, the more tokens per rand, which gives the shopper a reason to trade up and Pick n Pay a reason to stock all three.</p>
+      </div>
+      <p class="footnote">Pricing per DSG's live My Instant AI VAS rate card, incl. VAT / ex. VAT. No recurring charge — each card is a once-off, self-contained voucher.</p>
+    </section>
+
+    <!-- 8 : BUNDLE CVP - SECURE -->
+    <section class="slide">
+      <span class="eyebrow">Bundle CVP 1 of 4</span>
+      <h1 class="sh">PnP Mobile <span class="hl">Secure</span> — Bitdefender + eInsurer, one add-on</h1>
+      <p class="lede">Layered onto any existing PnP Mobile plan — one combined add-on line, not two separate sign-ups.</p>
+      <div class="bundlecard">
+        <div class="miniPill" style="background:var(--redsoft);color:var(--red);">Individual</div>
+        <div class="bundleprice"><b>R72.46</b><span>/month incl. VAT, on top of your existing plan</span></div>
+        <div class="checklist">
+          <div><span class="tick">✓</span>Bitdefender device &amp; identity protection (1 device)</div>
+          <div><span class="tick">✓</span>eInsurer TERA cyber cover, incl. identity-theft restoration</div>
+          <div><span class="tick">✓</span>One line on the existing PnP Mobile bill</div>
+          <div><span class="tick">✓</span>No new SIM, no new app, cancel anytime</div>
+        </div>
+        <div class="valuebox">
+          <div class="vrow"><span>Bitdefender 1 Device — full retail, annualised</span><b>R630</b></div>
+          <div class="vrow"><span>eInsurer TERA — full retail, annualised</span><b>R240</b></div>
+          <div class="total"><span>Total annual protection value</span><b>≈ R870</b></div>
+        </div>
+      </div>
+      <p class="footnote">Combined pricing built from DSG's live Bitdefender (1 device) and eInsurer (TERA) VAS rate cards. Final packaging and naming confirmed with Pick n Pay.</p>
+    </section>
+
+    <!-- 8 : BUNDLE CVP - FAMILY -->
+    <section class="slide">
+      <span class="eyebrow gold">Bundle CVP 2 of 4</span>
+      <h1 class="sh">PnP Mobile <span class="hlg">Family</span> — whole-household protection</h1>
+      <p class="lede">One Smart Shopper number, one bill, the whole household covered — device, identity and funds.</p>
+      <div class="bundlecard gold">
+        <div class="miniPill" style="background:var(--goldsoft);color:var(--gold);">Family · up to 5 devices</div>
+        <div class="bundleprice"><b>R145.63</b><span>/month incl. VAT, on top of your existing plan</span></div>
+        <div class="checklist gold">
+          <div><span class="tick">✓</span>Bitdefender Family protection — 5 devices covered</div>
+          <div><span class="tick">✓</span>eInsurer GIGA — cover up to R50,000, priority fraud response</div>
+          <div><span class="tick">✓</span>One statement, one Smart Shopper number for the whole family</div>
+          <div><span class="tick">✓</span>Suggested extension: an in-app family safety button, as offered on comparable DSG-powered mobile plans</div>
+        </div>
+        <div class="valuebox">
+          <div class="vrow"><span>Bitdefender Family (5 devices) — full retail, annualised</span><b>R1,388</b></div>
+          <div class="vrow"><span>eInsurer GIGA — full retail, annualised, cover up to R50,000</span><b>R360</b></div>
+          <div class="total"><span>Total annual protection value</span><b>≈ R1,748</b></div>
+        </div>
+      </div>
+      <p class="footnote">Combined pricing built from DSG's live Bitdefender (Family, 5 devices) and eInsurer (GIGA) VAS rate cards. Insurance limits per eInsurer's schedule.</p>
+    </section>
+
+    <!-- 9 : BUNDLE CVP - TRAVELLER -->
+    <section class="slide">
+      <span class="eyebrow navy">Bundle CVP 3 of 4</span>
+      <h1 class="sh">PnP Mobile <span class="hln">Traveller</span> — connected and covered abroad</h1>
+      <p class="lede">Built for the Smart Shopper who's about to fly — global data plus fraud cover for the trip, on the existing PnP Mobile SIM.</p>
+      <div class="bundlecard navy">
+        <div class="miniPill" style="background:var(--navysoft);color:var(--navy);">Traveller</div>
+        <div class="bundleprice"><b>R9.99</b><span>/month incl. VAT, on top of your existing plan</span></div>
+        <div class="bundleprice" style="margin-top:.1rem;"><b style="font-size:1.3rem;">+ R249.23</b><span>/year — Travel eSIM Annual Credit Pack</span></div>
+        <div class="checklist navy" style="margin-top:1rem;">
+          <div><span class="tick">✓</span>Travel eSIM Annual Credit Pack — data in 150+ countries, billed once a year</div>
+          <div><span class="tick">✓</span>eInsurer Entry — core cyber cover while spending abroad, billed monthly</div>
+          <div><span class="tick">✓</span>Same eSIM, no SIM swap, no roaming bill shock</div>
+          <div><span class="tick">✓</span>Smart Shopper points keep earning on every trip</div>
+        </div>
+        <div class="valuebox">
+          <div class="vrow"><span>Travel eSIM Annual Credit Pack — full retail</span><b>R249</b></div>
+          <div class="vrow"><span>eInsurer Entry — full retail, annualised</span><b>R120</b></div>
+          <div class="total"><span>Total annual protection &amp; data value</span><b>≈ R369</b></div>
+        </div>
+        <p class="footnote" style="margin-top:.9rem;">Occasional travellers can swap the Annual Credit Pack for pay-as-you-go data at ~R21/month equivalent instead.</p>
+      </div>
+      <p class="footnote">Pricing built from DSG's live Travel eSIM (Annual Credit Pack) and eInsurer (Entry) VAS rate cards. The R249.23 annual charge is shown in full — never diluted into a blended monthly figure.</p>
+    </section>
+
+    <!-- 10 : BUNDLE CVP - PRESTIGE -->
+    <section class="slide">
+      <span class="eyebrow">Bundle CVP 4 of 4 · Flagship</span>
+      <h1 class="sh">PnP Mobile <span class="hl">Prestige</span> — everything, on one line</h1>
+      <p class="lede">All three VAS in a single premium add-on — the top of the Smart Shopper VAS ladder, for the shopper who wants it all covered.</p>
+      <div class="bundlecard" style="border-color:rgba(24,18,21,.22);background:linear-gradient(180deg,rgba(24,18,21,.04),#fff 30%);">
+        <div class="miniPill" style="background:#181215;color:#F0C879;">All-in · Prestige</div>
+        <div class="bundleprice"><b style="color:var(--ink);">R119.39</b><span>/month incl. VAT, on top of your existing plan</span></div>
+        <div class="bundleprice" style="margin-top:.1rem;"><b style="font-size:1.3rem;color:var(--ink);">+ R249.23</b><span>/year — Travel eSIM Annual Credit Pack</span></div>
+        <div class="checklist" style="margin-top:1rem;">
+          <div><span class="tick" style="color:var(--ink);">✓</span>Bitdefender Premium + VPN — advanced threat defence, 1 device</div>
+          <div><span class="tick" style="color:var(--ink);">✓</span>eInsurer GIGA — cover up to R50,000, priority fraud response</div>
+          <div><span class="tick" style="color:var(--ink);">✓</span>Travel eSIM Annual Credit Pack — data in 150+ countries, billed once a year</div>
+          <div><span class="tick" style="color:var(--ink);">✓</span>Top-tier Smart Shopper recognition &amp; priority support</div>
+        </div>
+        <div class="valuebox">
+          <div class="vrow"><span>Bitdefender Premium + VPN — full retail, annualised</span><b>R1,073</b></div>
+          <div class="vrow"><span>eInsurer GIGA — full retail, annualised</span><b>R360</b></div>
+          <div class="vrow"><span>Travel eSIM Annual Credit Pack — full retail</span><b>R249</b></div>
+          <div class="total"><span>Total annual protection &amp; data value</span><b style="color:var(--ink);">≈ R1,682</b></div>
+        </div>
+      </div>
+      <p class="footnote">Pricing built from DSG's live Bitdefender (Premium+VPN), eInsurer (GIGA) and Travel eSIM (Annual Credit Pack) VAS rate cards. The R249.23 annual charge is shown in full — never diluted into a blended monthly figure.</p>
+    </section>
+
+    <!-- 11 : BITDEFENDER PROOF -->
+    <section class="slide">
+      <span class="eyebrow">Why Bitdefender</span>
+      <h1 class="sh">There's 'award-winning'. And then there's <span class="hl">award domination.</span></h1>
+      <div class="cardgrid">
+        <div class="card"><h4>🏠 Smart Home Protection</h4><p>Protects all connected devices · no app to install · router-level VPN &amp; parental control.</p></div>
+        <div class="card"><h4>📱 Endpoint &amp; Mobile Security</h4><p>Windows, macOS, Android &amp; iOS · protects against new &amp; existing threats.</p></div>
+        <div class="card"><h4>🔐 Privacy Solutions</h4><p>Improves online privacy · digital identity management · protects children online.</p></div>
+      </div>
+      <div class="boxlabel" style="margin-top:1.2rem;">Security suites 2023 — overall satisfaction</div>
+      <div class="barlist">
+        <div class="barrow"><span class="lbl on">Bitdefender</span><div class="track"><div class="fill" style="width:91%;"></div></div><span class="val on">9.1</span></div>
+        <div class="barrow"><span class="lbl">Webroot</span><div class="track"><div class="fill mut" style="width:90%;"></div></div><span class="val">9.0</span></div>
+        <div class="barrow"><span class="lbl">Malwarebytes</span><div class="track"><div class="fill mut" style="width:90%;"></div></div><span class="val">9.0</span></div>
+        <div class="barrow"><span class="lbl">Microsoft</span><div class="track"><div class="fill mut" style="width:86%;"></div></div><span class="val">8.6</span></div>
+      </div>
+      <div class="cardgrid" style="margin-top:1.2rem;">
+        <div class="card"><h4>+8% ARPU</h4><p>Reported growth from partners, from heightened perceived value of the plan.</p></div>
+        <div class="card"><h4>NPS 60+</h4><p>Customer satisfaction score among protected subscribers.</p></div>
+        <div class="card"><h4>Less Churn</h4><p>Happy, protected subscribers don't cancel — and make fewer support calls.</p></div>
+      </div>
+      <div class="quote">"Bitdefender is the best in the market today. We looked at three or four different options and all came to the same conclusion — Bitdefender is the most robust out there for consumer usage."<cite>Patrick Lo — Co-Founder, NETGEAR</cite></div>
+    </section>
+
+    <!-- 12 : EINSURER WHY IT MATTERS -->
+    <section class="slide">
+      <span class="eyebrow gold">Why eInsurer</span>
+      <h1 class="sh">Not just antivirus. <span class="hlg">Insurance for what antivirus can't stop.</span></h1>
+      <p class="lede">Bitdefender blocks the attack. But if a Smart Shopper's banking app is compromised, their identity is cloned, or their SIM is swapped, device security alone doesn't put the money back or fix their credit record. eInsurer does.</p>
+      <div class="statrow c3">
+        <div class="stat"><b class="g">74%</b><span>of users worried about being hacked¹</span></div>
+        <div class="stat"><b class="g">49%</b><span>expect a security solution from their provider²</span></div>
+        <div class="stat"><b class="g">R50,000</b><span>maximum cover on the GIGA tier</span></div>
+      </div>
+      <h2 class="ssh">What eInsurer actually protects</h2>
+      <div class="cardgrid">
+        <div class="card"><h4>The individual</h4><p>Identity-theft restoration support if personal information is stolen or misused.</p></div>
+        <div class="card"><h4>The device</h4><p>Works alongside Bitdefender — cover extends beyond the device Bitdefender secures.</p></div>
+        <div class="card"><h4>Their funds</h4><p>Cover for digital wallet fraud, unauthorised card transactions and cyber-enabled theft.</p></div>
+      </div>
+      <p class="footnote">1. Statista, crimes Americans worry about most, 2022. 2. Bitdefender Security &amp; Privacy Study, Sep 2023 — cited as general market context for the underlying threat landscape.</p>
+    </section>
+
+    <!-- 13 : TRAVEL ESIM STRATEGIC FIT -->
+    <section class="slide">
+      <span class="eyebrow navy">Why Travel eSIM</span>
+      <h1 class="sh">Why Pick n Pay should <span class="hln">own this line</span></h1>
+      <p class="lede">Every reason below is a reason a Smart Shopper buys travel data from someone else instead — Airalo, Holafly, an airport kiosk — if Pick n Pay doesn't offer it first.</p>
+      <div class="checklist navy" style="gap:1rem;">
+        <div><span class="tick">→</span><div><strong style="color:var(--ink)">You already own the relationship.</strong> Forex, luggage, travel toiletries — Pick n Pay sees travel-adjacent spend before a pure telco ever would.</div></div>
+        <div><span class="tick">→</span><div><strong style="color:var(--ink)">Stop the leakage.</strong> Roaming bills, airport kiosks and global eSIM apps capture spend Pick n Pay could carry on its own invoice.</div></div>
+        <div><span class="tick">→</span><div><strong style="color:var(--ink)">Pure ancillary margin.</strong> No handsets, no stock, no network capex — data is carried on partner networks at wholesale rates.</div></div>
+        <div><span class="tick">→</span><div><strong style="color:var(--ink)">A service story, not just a sale.</strong> A connected, travelling Smart Shopper can still be reached — connectivity is a care product as much as a revenue one.</div></div>
+        <div><span class="tick">→</span><div><strong style="color:var(--ink)">Own the data.</strong> Every purchase is a first-party, POPIA-aligned signal for CVM, loyalty and cross-sell.</div></div>
+      </div>
+    </section>
+
+    <!-- 14 : GO TO MARKET PACKAGING -->
+    <section class="slide">
+      <span class="eyebrow">Go-to-Market Strategy</span>
+      <h1 class="sh">Four ways to package the attach across Smart Shopper</h1>
+      <p class="lede">Mobile security, cyber cover and travel eSIM don't need to launch as one flat offer. DSG's packaging framework — proven across telco and retail partners globally — lets Pick n Pay dial monetisation up or down by segment.</p>
+      <div class="cardgrid c4">
+        <div class="card"><h4>Differentiation</h4><p>Basic Bitdefender promoted as a core PnP Mobile benefit.</p><div class="miniPill">50–80% attach</div></div>
+        <div class="card"><h4>Technology Upgrade</h4><p>Travel eSIM positioned as the modern upgrade path for travelling Smart Shoppers.</p><div class="miniPill">20–50% attach</div></div>
+        <div class="card"><h4>Portfolio Up-tiering</h4><p>Secure / Family / Prestige hard-bundled into upper Smart Shopper tiers.</p><div class="miniPill">5–20% attach</div></div>
+        <div class="card"><h4>Portfolio Add-on</h4><p>Targeted in-app and till-point campaigns for eInsurer and Traveller.</p><div class="miniPill">1–5% attach</div></div>
+      </div>
+      <p class="footnote">Packaging framework and attach-rate ranges per DSG's global Bitdefender go-to-market model for service providers.</p>
+    </section>
+
+    <!-- 15 : FINANCIAL MODEL - KEY METRICS -->
+    <section class="slide">
+      <span class="eyebrow">Financial Model</span>
+      <h1 class="sh">The economics of the <span class="hl">attach opportunity</span></h1>
+      <p class="lede">Modelled directly on Pick n Pay's confirmed 16 million Smart Shopper base and DSG's proven VAS benchmarks.</p>
+      <div class="kpigrid">
+        <div class="kpicell"><div class="kl">Total Smart Shopper Base</div><div class="kv red">16,000,000</div><div class="ks">Confirmed loyalty membership</div></div>
+        <div class="kpicell"><div class="kl">Blended ARPU Uplift</div><div class="kv gold">+8%</div><div class="ks">Reported by Bitdefender partners at scale</div></div>
+        <div class="kpicell"><div class="kl">Attach Rate Range</div><div class="kv red">1–80%</div><div class="ks">By packaging tier — differentiation to add-on</div></div>
+        <div class="kpicell"><div class="kl">Revenue Share Structure</div><div class="kv navy">50 / 50</div><div class="ks">DSG's standard VAS revenue-share model</div></div>
+        <div class="kpicell"><div class="kl">Time to Revenue</div><div class="kv gold">~8 Weeks</div><div class="ks">From signature to full VAS integration</div></div>
+        <div class="kpicell"><div class="kl">Customer Satisfaction</div><div class="kv red">NPS 60+</div><div class="ks">Among Bitdefender-protected subscribers</div></div>
+        <div class="kpicell"><div class="kl">1% of Smart Shopper Base</div><div class="kv navy">160,000</div><div class="ks">Potential attached subscribers at just 1% penetration</div></div>
+      </div>
+      <p class="footnote">Once-off integration cost is low — this is an API/app attach project, not a network build. No new capex, no new licences.</p>
+    </section>
+
+    <!-- 16 : BUSINESS CASE -->
+    <section class="slide">
+      <span class="eyebrow">Business Case</span>
+      <h1 class="sh">A 5-year scenario, <span class="hl">worst to best</span></h1>
+      <p class="lede">Modelled on DSG's real attach-rate curve from comparable VAS deployments, applied against Pick n Pay's confirmed 16 million Smart Shopper base at a blended R100/month combined VAS revenue per attached subscriber, on a 50/50 revenue share.</p>
+      <table class="scentable">
+        <tr><th>Attach Rate</th><th>Worst</th><th>Base</th><th>Best</th></tr>
+        <tr><td>Year 1</td><td>2.0%</td><td>4.0%</td><td>6.0%</td></tr>
+        <tr><td>Year 3</td><td>3.8%</td><td>7.6%</td><td>11.4%</td></tr>
+        <tr><td>Year 5</td><td>5.0%</td><td>10.0%</td><td class="best">15.0%</td></tr>
+      </table>
+      <div class="boxlabel">Base case — net contribution to Pick n Pay, 5 years</div>
+      <div class="barlist">
+        <div class="barrow"><span class="lbl">Year 1 · R384m</span><div class="track"><div class="fill" style="width:40%;"></div></div><span class="val on">4.0%</span></div>
+        <div class="barrow"><span class="lbl">Year 2 · R576m</span><div class="track"><div class="fill" style="width:60%;"></div></div><span class="val on">6.0%</span></div>
+        <div class="barrow"><span class="lbl">Year 3 · R729.6m</span><div class="track"><div class="fill" style="width:76%;"></div></div><span class="val on">7.6%</span></div>
+        <div class="barrow"><span class="lbl">Year 4 · R864m</span><div class="track"><div class="fill" style="width:90%;"></div></div><span class="val on">9.0%</span></div>
+        <div class="barrow"><span class="lbl">Year 5 · R960m</span><div class="track"><div class="fill" style="width:100%;"></div></div><span class="val on">10.0%</span></div>
+      </div>
+      <div class="statrow c3">
+        <div class="stat"><b>R480m</b><span>Year 5 run-rate to Pick n Pay — worst case</span></div>
+        <div class="stat"><b class="gold">R960m</b><span>Year 5 run-rate to Pick n Pay — base case</span></div>
+        <div class="stat"><b class="g">R1,440m</b><span>Year 5 run-rate to Pick n Pay — best case</span></div>
+      </div>
+      <p class="footnote">Illustrative model for discussion, built directly on Pick n Pay's confirmed 16 million Smart Shopper base. Attach-rate curve reflects DSG's real methodology from comparable travel eSIM and VAS deployments. Refine the blended ARPU assumption with Pick n Pay's actual VAS take-up data for a precise forecast.</p>
+    </section>
+
+    <!-- 17 : WHY DSG -->
+    <section class="slide">
+      <span class="eyebrow">Why DSG</span>
+      <h1 class="sh">A proven model, <span class="hl">not a pilot</span></h1>
+      <p class="lede">DSG's VAS platform already runs inside comparable mobile and connectivity brands. Pick n Pay would be attaching proven products with real pricing — not testing something unproven.</p>
+      <div class="statrow">
+        <div class="stat"><b>30+</b><span>years combined DSG / MVNE experience</span></div>
+        <div class="stat"><b>#1</b><span>globally ranked security partner</span></div>
+        <div class="stat"><b>150+</b><span>countries covered via Travel eSIM</span></div>
+        <div class="stat"><b>7</b><span>DSG divisions available to Pick n Pay</span></div>
+      </div>
+      <div class="boxlabel">Bitdefender partner network includes</div>
+      <div class="pillrow">
+        <span class="miniPill">Orange</span><span class="miniPill">WINDTRE</span><span class="miniPill">NETGEAR</span><span class="miniPill">Swisscom</span>
+        <span class="miniPill">Telefónica</span><span class="miniPill">SFR</span><span class="miniPill">Zyxel Networks</span><span class="miniPill">Viasat</span>
+        <span class="miniPill">Altice</span><span class="miniPill">TELE2</span><span class="miniPill">Telenet</span><span class="miniPill">Liberty Global</span>
+      </div>
+      <div class="quote">"We've chosen to partner with Bitdefender, because the quality of the technology clearly responds to customers' needs and the offering for ISPs was the most versatile we found."<cite>Grégory Rabuel — CEO, SFR</cite></div>
+    </section>
+
+    <!-- 18 : INTEGRATION TIMELINE -->
+    <section class="slide">
+      <span class="eyebrow">Delivery Plan</span>
+      <h1 class="sh">Attaching four VAS in <span class="hl">weeks, not months</span></h1>
+      <p class="lede">Because PnP Mobile and Smart Shopper already exist, this is an integration project, not a network build. No new infrastructure, no new licences.</p>
+      <div class="cardgrid">
+        <div class="card"><div class="miniPill">Weeks 1–2</div><h4 style="margin-top:.5rem;">Scoping &amp; sign-off</h4><p>Commercial terms, SOW and API scoping with Pick n Pay's technical team.</p></div>
+        <div class="card"><div class="miniPill">Weeks 3–4</div><h4 style="margin-top:.5rem;">API &amp; voucher integration</h4><p>Bitdefender, eInsurer and Travel eSIM wired into the app; My Instant AI voucher rails added to till point.</p></div>
+        <div class="card"><div class="miniPill">Week 5</div><h4 style="margin-top:.5rem;">UAT &amp; compliance</h4><p>End-to-end testing, POPIA review, and insurance disclosure checks for eInsurer.</p></div>
+        <div class="card"><div class="miniPill">Week 6</div><h4 style="margin-top:.5rem;">Store &amp; staff training</h4><p>Till-point and call-centre enablement across the network.</p></div>
+        <div class="card" style="border-color:rgba(156,107,10,.35);background:var(--goldsoft);"><div class="miniPill" style="background:#fff;">Week 7</div><h4 style="margin-top:.5rem;">Soft launch</h4><p>Pilot across a subset of stores and the Smart Shopper app.</p></div>
+        <div class="card"><div class="miniPill">Week 8+</div><h4 style="margin-top:.5rem;">Full rollout &amp; optimise</h4><p>Network-wide launch, attach-rate tuning and quarterly reviews.</p></div>
+      </div>
+    </section>
+
+    <!-- 19 : CONTACT -->
+    <section class="slide">
+      <span class="eyebrow">Next Steps</span>
+      <h1 class="sh">Let's add Bitdefender, eInsurer, Travel eSIM and My Instant AI to <span class="hl">PnP Mobile.</span></h1>
+      <p class="lede">We'd like to walk Pick n Pay leadership through the full VAS pricing, bundle CVPs, financial model and integration plan in detail.</p>
+      <div class="contactcard">
+        <div class="boxlabel" style="color:#F0C879;">Prepared By</div>
+        <div class="name">Jason Alexander</div>
+        <div class="role">MVNE / DSG</div>
+        <a href="mailto:Jasonal@digitalresilience.co.za">Jasonal@digitalresilience.co.za →</a>
+      </div>
+      <p class="footnote" style="text-align:center;margin-top:1.5rem;">This document is confidential and may not be shared without consent from MVNE. Figures are indicative and for discussion purposes only.</p>
+    </section>
+
+  </div></div>
+
+  <div class="progresstrack"><div class="progressfill" id="progressFill"></div></div>
+  <div class="footbar">
+    <div class="ftitle" id="slideTitle"></div>
+    <div class="fcount" id="slideCounter"></div>
+    <button class="navbtn" id="prevBtn" aria-label="Previous (←)">‹</button>
+    <button class="navbtn" id="nextBtn" aria-label="Next (→)">›</button>
+  </div>
+
+</div>
+
+<script>
+  function checkPw(){
+    var val = document.getElementById('pw-input').value;
+    if (val === 'pnp2026') {
+      document.getElementById('gate').classList.add('hidden');
+      document.getElementById('app').hidden = false;
+      initDeck();
+    } else {
+      var inp = document.getElementById('pw-input');
+      inp.classList.add('error');
+      document.getElementById('pw-error').style.display = 'block';
+      setTimeout(function(){ inp.classList.remove('error'); }, 1500);
+    }
+  }
+
+  var deckInit = false;
+  function initDeck(){
+    if (deckInit) return;
+    deckInit = true;
+    var slides = document.querySelectorAll('.slide');
+    var titles = ["Cover","The Opportunity","About DSG","The Integration","VAS Toolkit",
+      "VAS &middot; Bitdefender","VAS &middot; eInsurer","VAS &middot; Travel eSIM","VAS &middot; My Instant AI",
+      "Bundle &middot; PnP Mobile Secure","Bundle &middot; PnP Mobile Family",
+      "Bundle &middot; PnP Mobile Traveller","Bundle &middot; PnP Mobile Prestige",
+      "Why Bitdefender","Why eInsurer","Travel eSIM &middot; Strategic Fit",
+      "Go-to-Market Packaging","Financial Model &middot; Key Metrics","Business Case &middot; 5-Year Scenario",
+      "Why DSG","Integration Timeline","Next Steps"];
+    var idx = 0;
+    var pills = document.querySelectorAll('#pillnav a');
+    var stage = document.getElementById('stage');
+    var ranges = [1,2,3,4,9,13,17,20,21];
+
+    function render(){
+      slides.forEach(function(s,i){ s.classList.toggle('active', i===idx); });
+      document.getElementById('slideTitle').innerHTML = titles[idx];
+      document.getElementById('slideCounter').textContent = (idx+1) + ' / ' + slides.length;
+      document.getElementById('progressFill').style.width = (((idx+1)/slides.length)*100) + '%';
+      document.getElementById('prevBtn').disabled = (idx === 0);
+      document.getElementById('nextBtn').disabled = (idx === slides.length - 1);
+      var activeRangeStart = 0;
+      for (var r = 0; r < ranges.length; r++){ if (idx >= ranges[r]) activeRangeStart = ranges[r]; }
+      pills.forEach(function(a){
+        a.classList.toggle('active', parseInt(a.getAttribute('data-goto'),10) === activeRangeStart);
+      });
+      stage.scrollTop = 0;
+    }
+    function goTo(i){ idx = Math.max(0, Math.min(slides.length - 1, i)); render(); }
+
+    document.getElementById('prevBtn').onclick = function(){ goTo(idx - 1); };
+    document.getElementById('nextBtn').onclick = function(){ goTo(idx + 1); };
+    pills.forEach(function(a){
+      a.onclick = function(e){ e.preventDefault(); goTo(parseInt(a.getAttribute('data-goto'),10)); };
+    });
+    document.addEventListener('keydown', function(e){
+      if (document.getElementById('app').hidden) return;
+      if (e.key === 'ArrowRight') goTo(idx + 1);
+      if (e.key === 'ArrowLeft') goTo(idx - 1);
+    });
+    render();
+  }
+</script>
+
+</body>
+</html>
